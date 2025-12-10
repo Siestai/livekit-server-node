@@ -56,7 +56,7 @@ export default defineAgent({
   entry: async (ctx: JobContext) => {
     // Set up a voice AI pipeline using:
     // - Local STT: MLX Whisper (Apple Silicon Optimized)
-    // - Local LLM: Ollama
+    // - Local LLM: MLX LM (Apple Silicon Optimized)
     // - Cartesia TTS: Using Cartesia plugin with your own API key
     // 
     // LOCAL STT SETUP (MLX Whisper - Apple Silicon Optimized):
@@ -83,11 +83,11 @@ export default defineAgent({
     // LIVEKIT_URL=wss://your-project.livekit.cloud (or ws://localhost:7880 for local)
     // LIVEKIT_API_KEY=your-api-key (or devkey for local)
     // LIVEKIT_API_SECRET=your-api-secret (or secret for local)
-    // CARTESIA_API_KEY=your-cartesia-api-key  # Required for Cartesia TTS
-    // OLLAMA_BASE_URL=http://localhost:11434/v1
-    // LOCAL_STT_BASE_URL=http://localhost:9000/v1  # MLX Whisper service
-    // OLLAMA_API_KEY=ollama  # Dummy key for Ollama
-    // LOCAL_STT_API_KEY=local  # Dummy key for local STT server
+     // CARTESIA_API_KEY=your-cartesia-api-key  # Required for Cartesia TTS
+     // MLX_BASE_URL=http://localhost:4085/v1  # MLX LM server
+     // LOCAL_STT_BASE_URL=http://localhost:9000/v1  # MLX Whisper service
+     // MLX_API_KEY=mlx  # Dummy key for MLX LM server
+     // LOCAL_STT_API_KEY=local  # Dummy key for local STT server
 
     // Ensure VAD is loaded (required for non-streaming STT like Whisper)
     const vad = ctx.proc.userData.vad as silero.VAD;
@@ -108,14 +108,14 @@ export default defineAgent({
         apiKey: process.env.LOCAL_STT_API_KEY || 'local',
       }),
 
-      // A Large Language Model (LLM) - Using local Ollama instance
-      // Make sure Ollama is running locally on port 11434
-      // You can change the model name to any Ollama model you have installed (e.g., 'llama3.1', 'mistral', 'phi3', etc.)
+      // A Large Language Model (LLM) - Using local MLX LM server
+      // Make sure MLX LM server is running locally on port 4085
+      // Start with: python3 -m mlx_lm.server --model mlx-community/gpt-oss-20b-MXFP4-Q8 --port 4085
       llm: new openai.LLM({
-        model: 'gpt-oss:20b',
-        baseURL: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1',
-        // Ollama doesn't require an API key, but you can set a dummy value if needed
-        apiKey: process.env.OLLAMA_API_KEY || 'ollama',
+        model: 'mlx-community/gpt-oss-20b-MXFP4-Q8',
+        baseURL: process.env.MLX_BASE_URL || 'http://localhost:4085/v1',
+        // MLX LM server doesn't require an API key, but you can set a dummy value if needed
+        apiKey: process.env.MLX_API_KEY || 'mlx',
       }),
 
       // Text-to-speech (TTS) - Using Cartesia plugin with your API key
