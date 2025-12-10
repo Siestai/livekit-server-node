@@ -89,6 +89,12 @@ export default defineAgent({
     // OLLAMA_API_KEY=ollama  # Dummy key for Ollama
     // LOCAL_STT_API_KEY=local  # Dummy key for local STT server
 
+    // Ensure VAD is loaded (required for non-streaming STT like Whisper)
+    const vad = ctx.proc.userData.vad as silero.VAD;
+    if (!vad) {
+      throw new Error('VAD not loaded. Make sure prewarm completed successfully.');
+    }
+
     const session = new voice.AgentSession({
       // Speech-to-text (STT) - Using local MLX Whisper server (optimized for Apple Silicon)
       // The MLX Whisper service runs in the whisper-service/ subdirectory
@@ -125,9 +131,10 @@ export default defineAgent({
       }),
 
       // VAD and turn detection are used to determine when the user is speaking and when the agent should respond
+      // VAD is required for non-streaming STT (like Whisper) to buffer audio until end of speech
       // See more at https://docs.livekit.io/agents/build/turns
       turnDetection: new livekit.turnDetector.MultilingualModel(),
-      vad: ctx.proc.userData.vad! as silero.VAD,
+      vad: vad,
       voiceOptions: {
         // Allow the LLM to generate a response while waiting for the end of turn
         preemptiveGeneration: true,
