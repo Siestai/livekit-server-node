@@ -120,7 +120,7 @@ export default defineAgent({
       // See https://docs.livekit.io/agents/models/tts/plugins/cartesia for configuration options
       tts: new cartesia.TTS({
         model: process.env.CARTESIA_MODEL || 'sonic-3',
-        voice: process.env.CARTESIA_VOICE || '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc',
+        voice: process.env.CARTESIA_VOICE_ID || '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc',
         language: process.env.CARTESIA_LANGUAGE || 'en',
       }),
 
