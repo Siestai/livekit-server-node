@@ -167,6 +167,8 @@ export default defineAgent({
     ctx.addShutdownCallback(logUsage);
 
     // Start the session, which initializes the voice pipeline and warms up the models
+    // Note: VAD is configured in the session above (line 137), which is required for
+    // non-streaming STT (like Whisper) to buffer audio until end of speech
     await session.start({
       agent: new Assistant(),
       room: ctx.room,
