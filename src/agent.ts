@@ -1,7 +1,7 @@
 import {
   type JobContext,
   type JobProcess,
-  ServerOptions,
+  WorkerOptions,
   cli,
   defineAgent,
   metrics,
@@ -84,9 +84,10 @@ export default defineAgent({
     // LIVEKIT_API_KEY=your-api-key (or devkey for local)
     // LIVEKIT_API_SECRET=your-api-secret (or secret for local)
     // CARTESIA_API_KEY=your-cartesia-api-key  # Required for Cartesia TTS
-    // MLX_BASE_URL=http://localhost:4085/v1  # MLX LM server
+    // LLM_BASE_URL=http://localhost:11434/v1  # Ollama (default) or LiteLLM endpoint (without /chat/completions)
+    // LLM_MODEL=llama3.1  # Model name (e.g., llama3.1 for Ollama, or your LiteLLM model)
+    // LLM_API_KEY=ollama  # API key (for Ollama, any value works; for LiteLLM, use your actual API key)
     // LOCAL_STT_BASE_URL=http://localhost:9000/v1  # MLX Whisper service
-    // MLX_API_KEY=mlx  # Dummy key for MLX LM server
     // LOCAL_STT_API_KEY=local  # Dummy key for local STT server
 
     // Ensure VAD is loaded (required for non-streaming STT like Whisper)
@@ -108,8 +109,13 @@ export default defineAgent({
         apiKey: process.env.LOCAL_STT_API_KEY || 'local',
       }),
 
-      // A Large Language Model (LLM) - Using local Ollama instance
-      // Make sure Ollama is running locally on port 11434
+      // A Large Language Model (LLM) - Supports OpenAI-compatible APIs
+      // The OpenAI plugin automatically adds "Authorization: Bearer <apiKey>" header
+      // 
+      // Examples:
+      // - Ollama: baseURL=http://localhost:11434/v1, apiKey=ollama (or any value)
+      // - LiteLLM: baseURL=http://siestais-mac-studio:14000, apiKey=<your-litellm-api-key>
+      //   (Note: Don't include /chat/completions in baseURL - the plugin adds it automatically)
       llm: new openai.LLM({
         model: process.env.LLM_MODEL || 'llama3.1',
         baseURL: process.env.LLM_BASE_URL || 'http://localhost:11434/v1',
@@ -167,14 +173,20 @@ export default defineAgent({
     // Start the session, which initializes the voice pipeline and warms up the models
     // Note: VAD is configured in the session above (line 137), which is required for
     // non-streaming STT (like Whisper) to buffer audio until end of speech
+    
+    // Check if connecting to LiveKit Cloud (enhanced noise cancellation is Cloud-only)
+    const isLiveKitCloud = process.env.LIVEKIT_URL?.includes('livekit.cloud') ?? false;
+    
     await session.start({
       agent: new Assistant(),
       room: ctx.room,
       inputOptions: {
         // LiveKit Cloud enhanced noise cancellation
-        // - If self-hosting, omit this parameter
+        // - Only use when connecting to LiveKit Cloud (not available for self-hosted)
         // - For telephony applications, use `BackgroundVoiceCancellationTelephony` for best results
-        noiseCancellation: BackgroundVoiceCancellation(),
+        ...(isLiveKitCloud && {
+          noiseCancellation: BackgroundVoiceCancellation(),
+        }),
       },
     });
 
@@ -183,4 +195,4 @@ export default defineAgent({
   },
 });
 
-cli.runApp(new ServerOptions({ agent: fileURLToPath(import.meta.url) }));
+cli.runApp(new WorkerOptions({ agent: fileURLToPath(import.meta.url) }));

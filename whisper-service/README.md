@@ -15,6 +15,20 @@ A local Speech-to-Text service using [MLX Whisper](https://huggingface.co/mlx-co
 - Python 3.9 or higher
 - Apple Silicon Mac (M1/M2/M3)
 - macOS 12.0 or later
+- ffmpeg (required for audio processing)
+
+### Installing ffmpeg
+
+On macOS, install ffmpeg using Homebrew:
+
+```bash
+brew install ffmpeg
+```
+
+Verify installation:
+```bash
+ffmpeg -version
+```
 
 ## Installation
 
@@ -91,6 +105,22 @@ The service is automatically configured in `agent.ts` to use this local service.
 - **CPU usage**: Optimized for Apple Silicon Neural Engine
 
 ## Troubleshooting
+
+### ffmpeg Not Found Error
+
+If you see an error like `FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'`:
+
+1. Install ffmpeg using Homebrew:
+   ```bash
+   brew install ffmpeg
+   ```
+
+2. Verify installation:
+   ```bash
+   ffmpeg -version
+   ```
+
+3. Restart the whisper service after installing ffmpeg.
 
 ### Model Download Issues
 

@@ -5,3 +5,4 @@ dev: ## Run development setup and start services
 	pnpm run whisper:setup
 	pnpm run download-files
 	pnpm run whisper:start
+	pnpm run dev
